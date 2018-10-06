@@ -20,6 +20,7 @@ import com.habitrpg.android.habitica.extensions.notNull
 import com.habitrpg.android.habitica.helpers.RxErrorHandler
 import com.habitrpg.android.habitica.models.inventory.Quest
 import com.habitrpg.android.habitica.models.inventory.QuestContent
+import com.habitrpg.android.habitica.models.members.Member
 import com.habitrpg.android.habitica.models.social.Group
 import com.habitrpg.android.habitica.models.user.User
 import com.habitrpg.android.habitica.modules.AppModule
@@ -50,6 +51,7 @@ class PartyDetailFragment : BaseFragment() {
 
     private val refreshLayout: SwipeRefreshLayout? by bindView(R.id.refreshLayout)
     private val partyInvitationWrapper: ViewGroup? by bindView(R.id.party_invitation_wrapper)
+    private val partyInvitationText: TextView? by bindView(R.id.party_invitation_text)
     private val partyAcceptButton: Button? by bindView(R.id.party_invite_accept_button)
     private val partyRejectButton: Button? by bindView(R.id.party_invite_reject_button)
     private val titleView: TextView? by bindView(R.id.title_view)
@@ -157,6 +159,10 @@ class PartyDetailFragment : BaseFragment() {
 
         var invitationVisibility = View.GONE
         if (user.invitations?.party?.id?.isNotEmpty() == true) {
+            user.invitations?.party?.inviter.notNull {
+                socialRepository.getMember(it)
+                        .subscribe(Consumer {this@PartyDetailFragment.updatePartyInvite(it) }, RxErrorHandler.handleEmptyError())
+            }
             invitationVisibility = View.VISIBLE
         }
 
@@ -228,6 +234,15 @@ class PartyDetailFragment : BaseFragment() {
         partyId.notNull {
             socialRepository.rejectQuest(user, it).subscribe(Consumer { }, RxErrorHandler.handleEmptyError())
         }
+    }
+
+    private fun updatePartyInvite(inviter: Member) {
+        if (!inviter.profile?.name.isNullOrEmpty()) {
+            partyInvitationText?.text = getString(R.string.user_invited_you_to_party, inviter.profile?.name)
+        } else {
+            partyInvitationText?.text = getString(R.string.invited_to_party)
+        }
+
     }
 
     private fun onPartyInviteAccepted() {
