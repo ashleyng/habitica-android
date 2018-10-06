@@ -10,7 +10,10 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
+import com.facebook.drawee.backends.pipeline.Fresco
+import com.facebook.drawee.controller.BaseControllerListener
 import com.facebook.drawee.view.SimpleDraweeView
+import com.facebook.imagepipeline.image.ImageInfo
 import com.habitrpg.android.habitica.R
 import com.habitrpg.android.habitica.components.AppComponent
 import com.habitrpg.android.habitica.data.InventoryRepository
@@ -51,6 +54,7 @@ class PartyDetailFragment : BaseFragment() {
 
     private val refreshLayout: SwipeRefreshLayout? by bindView(R.id.refreshLayout)
     private val partyInvitationWrapper: ViewGroup? by bindView(R.id.party_invitation_wrapper)
+    private val partyInviterAvatar: SimpleDraweeView? by bindView(R.id.party_inviter_avatar)
     private val partyInvitationText: TextView? by bindView(R.id.party_invitation_text)
     private val partyAcceptButton: Button? by bindView(R.id.party_invite_accept_button)
     private val partyRejectButton: Button? by bindView(R.id.party_invite_reject_button)
@@ -243,6 +247,14 @@ class PartyDetailFragment : BaseFragment() {
             partyInvitationText?.text = getString(R.string.invited_to_party)
         }
 
+        partyInviterAvatar?.controller = Fresco.newDraweeControllerBuilder()
+                .setUri(inviter.profile?.imageUrl)
+                .setControllerListener(object : BaseControllerListener<ImageInfo>() {
+                    override fun onFailure(id: String?, throwable: Throwable?) {
+                        partyInviterAvatar?.visibility = View.GONE
+                    }
+                })
+                .build()
     }
 
     private fun onPartyInviteAccepted() {
